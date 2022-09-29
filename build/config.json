@@ -1,0 +1,17 @@
+{
+  "Version": "1.0",
+  "AppName": "replaceAll",
+  "AppName_note": "產出的執行檔名稱",
+  "PkgName": "",
+  "PkgName_note": "等這個build變成package的形式才需要考慮",
+  "LdFlags": "-s -w",
+  "ZipPsw": "",
+  "Info": {
+    "_": "以下為詳細資訊所用到的檔案資料",
+    "Desc": "strings.ReplaceAll",
+    "ProductName": "replace",
+    "RequireAdmin": true,
+    "Copyright": "© 2022 Carson. All rights reserved.",
+    "Lang": "en-us"
+  }
+}
