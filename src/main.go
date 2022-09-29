@@ -5,6 +5,7 @@ import (
 	"fmt"
 	. "github.com/CarsonSlovoka/go-pkg/v2/fmt"
 	"github.com/CarsonSlovoka/go-pkg/v2/slices"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,10 +36,12 @@ func NewConfig(path string) (*Config, error) {
 
 var (
 	pWarn *ColorPrinter
+	pErr  *ColorPrinter
 )
 
 func init() {
 	pWarn = NewColorPrinter(255, 255, 255, 0, 0, 255)
+	pErr = NewColorPrinter(255, 255, 255, 255, 0, 0)
 }
 
 func main() {
@@ -79,10 +82,18 @@ func main() {
 		go func(files []string) {
 			defer wg.Done()
 			for _, fPath := range files {
-				bs, err := os.ReadFile(fPath)
+				f, err := os.OpenFile(fPath, os.O_RDWR, 0666)
 				if err != nil {
-					log.Println(err)
+					log.Println(pErr.Sprintln(err))
 					continue
+				}
+				defer func() {
+					_ = f.Close()
+				}()
+
+				bs, err := io.ReadAll(f)
+				if err != nil {
+					log.Println(pErr.Sprintln(err))
 				}
 
 				if !re.Match(bs) {
@@ -90,7 +101,8 @@ func main() {
 				}
 
 				newStr := re.ReplaceAllString(string(bs), cfg.Substitution)
-				f, err := os.OpenFile(fPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
+				_ = f.Truncate(0)     // 我們使用O_RDWR所以可以再寫入，把所有內容截斷(清除內文)
+				_, err = f.Seek(0, 0) // 指標回到0,0的位置再開始重新寫入
 				if err != nil {
 					log.Println(err)
 					continue
