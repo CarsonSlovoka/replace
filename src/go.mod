@@ -1,4 +1,4 @@
-module replace
+module replaceAll
 
 go 1.19
 

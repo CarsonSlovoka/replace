@@ -5,11 +5,13 @@
   "substitution": "<advance width=\"$1\" height=\"1024\"/>",
   "dirs_example": [
     "C:\\Users\\demoDir",
-    "C:/Users/demoDir"
+    "C:/Users/demoDir",
+    "./demo",
+    "../sub/demo"
   ],
   "dirs": [
   ],
-  "maxLoading_note": "每一個工作器，最多可處理的檔案上限",
+  "maxLoading_note": "每一個工作器，最多可處理的檔案上限，假設總須處理的檔案2000筆，設定為500，將會啟動4個routine進行處理",
   "maxLoading": 500,
   "verbose": true
 }
