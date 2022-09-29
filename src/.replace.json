@@ -1,0 +1,15 @@
+{
+  "ext": [],
+  "ext_example": [".glif", ".csv", ".txt"],
+  "regexp": "<advance width=\"(\\d*)\" height=\"(\\d*)\"/>",
+  "substitution": "<advance width=\"$1\" height=\"1024\"/>",
+  "dirs_example": [
+    "C:\\Users\\demoDir",
+    "C:/Users/demoDir"
+  ],
+  "dirs": [
+  ],
+  "maxLoading_note": "每一個工作器，最多可處理的檔案上限",
+  "maxLoading": 500,
+  "verbose": true
+}
