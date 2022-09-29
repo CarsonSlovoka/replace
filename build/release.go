@@ -8,6 +8,8 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -247,15 +249,16 @@ func getFileOnly(dirEntry []os.DirEntry, acceptSuffix []string) (files []os.DirE
 	return files
 }
 
-func ZipSource(psw string) (err error) {
+func ZipSource(psw string) (zipFilePath string, err error) {
 	zipName := fmt.Sprintf("%s_%s_%s_%s.zip", cfg.AppName, runtime.GOOS, runtime.GOARCH, cfg.Version)
 	// 確保輸出目錄存在 (已存在不影響，不存在就新建)
 	if err = os.MkdirAll("temp", os.ModePerm); err != nil {
-		return err
+		return "", err
 	}
-	fz, err := os.Create("temp/" + zipName)
+	zipFilePath = filepath.Join("temp/" + zipName)
+	fz, err := os.Create(zipFilePath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer func() { // defer LIFO 後進先出的特性，因此第一個defer才是最尾聲的內容
 		err = fz.Close() // 注意如果每個的名稱都用f，那麼到了defer之後的f有可能已經和您預想的f不同了
@@ -292,16 +295,16 @@ func ZipSource(psw string) (err error) {
 		log.Printf("opening %q...\n", d.srcPath)
 		f, err := os.Open(d.srcPath)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		log.Printf("writing %q to archive...\n", d.outPath)
 		w, err := zipWriter.Create(d.outPath)
 		if err != nil {
-			return err
+			return "", err
 		}
 		if _, err := io.Copy(w, f); err != nil {
-			return err
+			return "", err
 		}
 		_ = f.Close()
 	}
@@ -311,7 +314,7 @@ func ZipSource(psw string) (err error) {
 		buf := bytes.NewBuffer([]byte(""))
 		dirEntrySlice, err := os.ReadDir("doc/release-note/")
 		if err != nil {
-			return fmt.Errorf("read release-note dir error. %w", err)
+			return "", fmt.Errorf("read release-note dir error. %w", err)
 		}
 
 		files := getFileOnly(dirEntrySlice, nil)
@@ -322,7 +325,7 @@ func ZipSource(psw string) (err error) {
 		for _, curDirEntry := range files {
 			contents, err := os.ReadFile(fmt.Sprintf("doc/release-note/%s", curDirEntry.Name()))
 			if err != nil {
-				return err
+				return "", err
 			}
 			buf.Write([]byte(fmt.Sprintf("%s\n\n", contents)))
 		}
@@ -330,13 +333,13 @@ func ZipSource(psw string) (err error) {
 		// 寫入zip
 		w, err := zipWriter.Create("release-note.md")
 		if err != nil {
-			return err
+			return "", err
 		}
 		if _, err := io.Copy(w, buf); err != nil {
-			return err
+			return "", err
 		}
 	}
-	return nil
+	return zipFilePath, nil
 }
 
 func main() {
@@ -350,11 +353,11 @@ func main() {
 			cfg.Info.Copyright,
 			cfg.Info.Lang,
 			cfg.Info.RequireAdmin}); err != nil {
-		panic(err)
+		log.Fatal(err)
 	} else {
 		defer func() {
 			if err = removeAllTmplFunc(); err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 		}()
 	}
@@ -362,27 +365,39 @@ func main() {
 	wkDir, _ := filepath.Abs("../src") // go.mod所在路徑
 	outputExePath := cfg.AppName + ".exe"
 	if err := BuildMain(wkDir, filepath.Join("../build/", outputExePath)); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	res := "resources.res"
 	if err := Rc2Res(res); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer func() {
 		_ = os.Remove(res)
 	}()
 
 	if err := AddVersionInf(outputExePath, res); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if err := AddIcon(outputExePath, "app.ico"); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	if err := ZipSource(cfg.ZipPsw); err != nil {
-		panic(err)
+	zipFilePath, err := ZipSource(cfg.ZipPsw)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 顯示zip檔案的sha256雜湊值
+	hasher256 := sha256.New()
+	{
+		bs, err := os.ReadFile(zipFilePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		hasher256.Write(bs)
+		fmt.Println("sha256:" + hex.EncodeToString(hasher256.Sum(nil)))
 	}
 
 	// 開啟輸出的資料夾(temp)
