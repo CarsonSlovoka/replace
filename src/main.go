@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	. "github.com/CarsonSlovoka/go-pkg/v2/fmt"
 	"github.com/CarsonSlovoka/go-pkg/v2/slices"
@@ -45,7 +46,11 @@ func init() {
 }
 
 func main() {
-	cfg, err := NewConfig(".replace.json")
+	var configPath string
+	flag.StringVar(&configPath, "f", ".replace.json", "config file.")
+	flag.Parse()
+
+	cfg, err := NewConfig(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
