@@ -16,12 +16,12 @@ import (
 )
 
 type Config struct {
-	SearchExtensions []string `json:"ext"` // 要處理的附檔名
-	Dirs             []string // 要處理的資料夾路徑
-	Regexp           string   // 正規式
-	Substitution     string   // 取代內容
-	MaxLoading       int      // 每一個routine可以處理的檔案上限
-	Verbose          bool
+	SearchNamePattern []string `json:"namePattern"` // 要處理的附檔名
+	Dirs              []string // 要處理的資料夾路徑
+	Regexp            string   // 正規式
+	Substitution      string   // 取代內容
+	MaxLoading        int      // 每一個routine可以處理的檔案上限
+	Verbose           bool
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -46,9 +46,18 @@ func init() {
 }
 
 func main() {
-	var configPath string
-	flag.StringVar(&configPath, "f", ".replace.json", "config file.")
-	flag.Parse()
+	var (
+		configPath string
+		isDryRun   bool
+	)
+
+	flagSetReplace := flag.NewFlagSet("replace", flag.ExitOnError)
+	// flag.StringVar(&configPath, "f", ".replace.json", "config file.") // 使用預設的flag這其實該包的一個全域變數(CommandLine: flagSet)，在test多個案例運行下，大家都共用此變數，就會導致重複定義的問題發生，所以才要自己設定一個新的flagSet
+	flagSetReplace.StringVar(&configPath, "f", ".replace.json", "config file.")
+	flagSetReplace.BoolVar(&isDryRun, "dry", false, "dry run?")
+	if err := flagSetReplace.Parse(os.Args[1:]); err != nil {
+		log.Fatal(err)
+	}
 
 	cfg, err := NewConfig(configPath)
 	if err != nil {
@@ -66,14 +75,20 @@ func main() {
 				return nil
 			}
 
-			if len(cfg.SearchExtensions) == 0 {
+			if len(cfg.SearchNamePattern) == 0 {
 				allFileList = append(allFileList, path)
 				return nil
 			}
 
-			if len(cfg.SearchExtensions) > 0 && slices.Any(cfg.SearchExtensions, filepath.Ext(path)) { // .md, .rst, ...
-				allFileList = append(allFileList, path)
-				return nil
+			for _, pattern := range cfg.SearchNamePattern { // [aA][bB]*.txt, *.txt
+				matched, err := filepath.Match(pattern, info.Name())
+				if err != nil {
+					return nil
+				}
+				if matched {
+					allFileList = append(allFileList, path)
+				}
+
 			}
 			return nil
 		})
@@ -92,9 +107,6 @@ func main() {
 					log.Println(pErr.Sprintln(err))
 					continue
 				}
-				defer func() {
-					_ = f.Close()
-				}()
 
 				bs, err := io.ReadAll(f)
 				if err != nil {
@@ -106,12 +118,19 @@ func main() {
 				}
 
 				newStr := re.ReplaceAllString(string(bs), cfg.Substitution)
+				if isDryRun {
+					_ = f.Close()
+					fmt.Print(newStr)
+					return
+				}
+
 				_ = f.Truncate(0)     // 我們使用O_RDWR所以可以再寫入，把所有內容截斷(清除內文)
 				_, err = f.Seek(0, 0) // 指標回到0,0的位置再開始重新寫入
 				if err != nil {
 					log.Println(err)
 					continue
 				}
+
 				if _, err = f.Write([]byte(newStr)); err != nil {
 					_ = f.Close()
 					log.Println(err)
@@ -125,5 +144,5 @@ func main() {
 		}(subFiles)
 	}
 	wg.Wait()
-	fmt.Printf("%.0f seconds in total\n", time.Now().Sub(sTime).Seconds())
+	log.Printf("%.0f seconds in total\n", time.Now().Sub(sTime).Seconds())
 }

@@ -1,7 +1,8 @@
 {
-  "ext": [],
-  "ext_example": [".glif", ".csv", ".txt"],
+  "namePattern": [],
+  "namePattern_example": ["*.glif", "*.csv", "[aA][bB]*.txt", "demo.json"],
   "regexp": "<advance width=\"(\\d*)\" height=\"(\\d*)\"/>",
+  "regexp_example": "(?im)Hello insensitive(不區分大小寫) m(multi line)",
   "substitution": "<advance width=\"$1\" height=\"1024\"/>",
   "dirs_example": [
     "C:\\Users\\demoDir",
