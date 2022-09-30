@@ -22,9 +22,9 @@
 
 ## Features
 
-- [可指定多個副檔名](https://github.com/CarsonSlovoka/replace/blob/40066b77040f0f694a7558fcf2b561f903cd3f14/src/.replace.json#L2)(不指定則視為全部對象)
-- [可以指派資料夾](https://github.com/CarsonSlovoka/replace/blob/40066b77040f0f694a7558fcf2b561f903cd3f14/src/.replace.json#L12-L13): 相對路徑, 絕對路徑都支持
-- [能使用正規式進行取代](https://github.com/CarsonSlovoka/replace/blob/40066b77040f0f694a7558fcf2b561f903cd3f14/src/.replace.json#L4-L5)
+- [可指定要匹配的檔案**名稱**](https://github.com/CarsonSlovoka/replace/blob/1230a78f5e29ab84177b362fff48e27264c97aba/src/.replace.json#L2-L3)(不指定則視為全部對象)
+- [可以指派資料夾](https://github.com/CarsonSlovoka/replace/blob/1230a78f5e29ab84177b362fff48e27264c97aba/src/.replace.json#L13-L14): 相對路徑, 絕對路徑都支持
+- [能使用正規式進行取代](https://github.com/CarsonSlovoka/replace/blob/1230a78f5e29ab84177b362fff48e27264c97aba/src/.replace.json#L4-L5)
 
 ## Install
 
