@@ -1,0 +1,4 @@
+# *.txt text eol=lf
+# *.json text eol=lf
+* text eol=lf
+*.exe binary

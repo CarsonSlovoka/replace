@@ -5,8 +5,6 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"runtime"
-	"strings"
 )
 
 func chdir(dir string) (back2orgDirFunc func()) {
@@ -20,8 +18,7 @@ func chdir(dir string) (back2orgDirFunc func()) {
 	}
 }
 
-// 很奇怪github.action的測試換行符號特怪，明明都是windows本機可以過，到那就不能過，因此才用這種方式抓stdout的資料
-// 如果output的內容有多列才需要考慮使用此函數來幫忙
+// GitHub.action.checkout如果沒有在.gitAttributes設定eol，那麼在windows下，他會自動變成crlf，因此讀到的txt都是crlf結尾，與go中寫的Output的lf結尾不同，就會導致錯誤
 func getStdOut(mainFunc func()) string {
 	orgStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -61,18 +58,7 @@ func Example_main_multiline() {
 	defer back2orgDirFunc()
 
 	os.Args = []string{os.Args[0], "-f=config.json", "-dry=1"}
-	out := getStdOut(main)
-
-	var sep string
-	if runtime.GOOS == "windows" {
-		sep = "\r\n"
-	} else {
-		sep = "\n"
-	}
-	for _, line := range strings.Split(out, sep) {
-		fmt.Println(line)
-	}
-
+	main()
 	// Output:
 	// Hello World foo
 	// Hello World
@@ -83,19 +69,7 @@ func Example_mainPattern() {
 	defer back2orgDirFunc()
 
 	os.Args = []string{os.Args[0], "-f=config.json", "-dry=1"}
-
-	out := getStdOut(main)
-
-	var sep string
-	if runtime.GOOS == "windows" {
-		sep = "\r\n"
-	} else {
-		sep = "\n"
-	}
-	for _, line := range strings.Split(out, sep) {
-		fmt.Println(line)
-	}
-
+	main()
 	// Output:
 	// Example0
 	// Example00
