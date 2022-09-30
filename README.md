@@ -26,18 +26,28 @@
 - [可以指派資料夾](https://github.com/CarsonSlovoka/replace/blob/1230a78f5e29ab84177b362fff48e27264c97aba/src/.replace.json#L13-L14): 相對路徑, 絕對路徑都支持
 - [能使用正規式進行取代](https://github.com/CarsonSlovoka/replace/blob/1230a78f5e29ab84177b362fff48e27264c97aba/src/.replace.json#L4-L5)
 
-## Install
+## Download
 
-```
+可以至[releases](https://github.com/CarsonSlovoka/replace/releases)的頁面找尋喜歡的版本下載該zip檔案即可(目前僅提供windows)
+
+## Build & Install
+
+您也可以選擇手動編譯
+
+```yaml
 git clone https://github.com/CarsonSlovoka/replace.git
 cd replace/src
 go install -ldflags "-s -w"
+
+# 如果您不喜歡go install預設放置的目錄，可以選擇以下指令替換
+go build -o replaceAll.exe -ldflags "-s -w"
 ```
 
 ## USAGE
 
 在您的工作目錄新增檔案(例如:my-replace)，內容可以參考[.replace.json](src/.replace.json)
 
-```
+```yaml
 reaplceAll.exe -f="my-replace.json"
+reaplceAll.exe -f="my-replace.json" -dry=1 # 僅測試，不會更改檔案
 ```
