@@ -1,0 +1,11 @@
+{
+  "namePattern": ["demo-[0-9]*.txt"],
+  "regexp": "demo",
+  "substitution": "Example",
+  "substitution_note": "$1 表示第一個匹配到的群組名稱",
+  "dirs": [
+    "."
+  ],
+  "maxLoading": 500,
+  "verbose": false
+}

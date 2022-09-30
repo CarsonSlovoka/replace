@@ -1,0 +1,10 @@
+{
+  "namePattern": ["*.txt"],
+  "regexp": "(?i)[aeiOu]",
+  "substitution": "?",
+  "dirs": [
+    "."
+  ],
+  "maxLoading": 500,
+  "verbose": true
+}

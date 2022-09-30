@@ -1,0 +1,11 @@
+{
+  "namePattern": ["hello.txt"],
+  "regexp": "(?m)^(Hello)",
+  "substitution": "$1 World",
+  "substitution_note": "$1 表示第一個匹配到的群組名稱",
+  "dirs": [
+    "."
+  ],
+  "maxLoading": 500,
+  "verbose": false
+}
