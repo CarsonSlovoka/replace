@@ -32,4 +32,4 @@ jobs:
         run: go mod tidy
 
       - name: test All
-        run: go test ./...
+        run: go test ./... -v

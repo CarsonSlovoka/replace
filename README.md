@@ -1,7 +1,7 @@
 <p align="center">
   <a href="asset/img/site/favicon.svg">
     <img alt="replace" src="asset/img/site/favicon.svg" width="384"/>
-  </a>
+  </a><br>
   <a href="http://golang.org">
       <img src="https://img.shields.io/badge/Made%20with-Go-1f425f.svg" alt="Made with Go">
   </a>

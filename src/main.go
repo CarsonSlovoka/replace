@@ -144,5 +144,7 @@ func main() {
 		}(subFiles)
 	}
 	wg.Wait()
-	log.Printf("%.0f seconds in total\n", time.Now().Sub(sTime).Seconds())
+	if !isDryRun {
+		log.Printf("%.0f seconds in total\n", time.Now().Sub(sTime).Seconds())
+	}
 }
