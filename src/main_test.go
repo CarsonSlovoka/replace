@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"regexp"
+	"runtime"
+	"strings"
 )
 
 func chdir(dir string) (back2orgDirFunc func()) {
@@ -15,6 +18,22 @@ func chdir(dir string) (back2orgDirFunc func()) {
 			panic(err)
 		}
 	}
+}
+
+// 很奇怪github.action的測試換行符號特怪，明明都是windows本機可以過，到那就不能過，因此才用這種方式抓stdout的資料
+// 如果output的內容有多列才需要考慮使用此函數來幫忙
+func getStdOut(mainFunc func()) string {
+	orgStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	mainFunc()
+
+	_ = w.Close()
+	bs, _ := io.ReadAll(r)
+	_ = r.Close()
+	os.Stdout = orgStdout
+	return string(bs)
 }
 
 func Example_main_caseSensitive() {
@@ -37,10 +56,23 @@ func Example_main_caseInsensitive() {
 
 // multiline影響的是匹配開頭的^或者結尾的$符號才會需要用到
 func Example_main_multiline() {
+
 	back2orgDirFunc := chdir("test/multiline")
 	defer back2orgDirFunc()
+
 	os.Args = []string{os.Args[0], "-f=config.json", "-dry=1"}
-	main()
+	out := getStdOut(main)
+
+	var sep string
+	if runtime.GOOS == "windows" {
+		sep = "\r\n"
+	} else {
+		sep = "\n"
+	}
+	for _, line := range strings.Split(out, sep) {
+		fmt.Println(line)
+	}
+
 	// Output:
 	// Hello World foo
 	// Hello World
@@ -49,8 +81,21 @@ func Example_main_multiline() {
 func Example_mainPattern() {
 	back2orgDirFunc := chdir("test/pattern")
 	defer back2orgDirFunc()
+
 	os.Args = []string{os.Args[0], "-f=config.json", "-dry=1"}
-	main()
+
+	out := getStdOut(main)
+
+	var sep string
+	if runtime.GOOS == "windows" {
+		sep = "\r\n"
+	} else {
+		sep = "\n"
+	}
+	for _, line := range strings.Split(out, sep) {
+		fmt.Println(line)
+	}
+
 	// Output:
 	// Example0
 	// Example00
