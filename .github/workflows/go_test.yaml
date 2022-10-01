@@ -20,29 +20,40 @@ jobs:
     runs-on: ${{ matrix.platform }}
     name: Integration tests
     steps:
-      - name: Install Go.
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-
       - name: Check out code into the Go module directory.
         uses: actions/checkout@v3
 
       # https://github.com/actions/cache#example-workflow
       # https://github.com/actions/cache/blob/main/examples.md#go---modules
-      # - name: cache
-      #   id: cache-primes
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ~\AppData\Local\go-build
-      #       ~\go\pkg\mod
-      #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-go-
+      - name: Enable Cache
+        id: cache-primes
+        uses: actions/cache@v3
+        with:
+          # path:
+          #   Linux: ~/.cache/go-build
+          #   MacOS: ~/Library/Caches/go-build
+          #   Windows: ~\AppData\Local\go-build
+          path: |
+            ~\AppData\Local\go-build
+            ~\go\pkg\mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Go.
+        if: steps.cache-action.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
 
       - name: go mod tidy
+        if: steps.cache-action.outputs.cache-hit != 'true'
         run: go mod tidy
 
       - name: test All
         run: go test ./... -v
+
+      - name: Verify we have our cached file
+        run: |
+          dir ~\AppData\Local\go-build &&
+          dir ~\go\pkg\mod
