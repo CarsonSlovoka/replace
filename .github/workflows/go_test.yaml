@@ -26,7 +26,8 @@ jobs:
       # https://github.com/actions/cache#example-workflow
       # https://github.com/actions/cache/blob/main/examples.md#go---modules
       - name: Enable Cache
-        id: cache-primes
+        # Note: The id defined in actions/cache must match the id in the if statement (i.e. steps.[ID].outputs.cache-hit)
+        id: cache-go-and-mod
         uses: actions/cache@v3
         with:
           # path:
@@ -37,17 +38,19 @@ jobs:
             ~\AppData\Local\go-build
             ~\go\pkg\mod
           key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+          # key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          # 如果多了**會出現Cache hit occurred on the primary key的錯誤
           restore-keys: |
             ${{ runner.os }}-go-
 
       - name: Install Go.
-        if: steps.cache-action.outputs.cache-hit != 'true'
+        if: steps.cache-go-and-mod.outputs.cache-hit != 'true'
         uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: go mod tidy
-        if: steps.cache-action.outputs.cache-hit != 'true'
+        if: steps.cache-go-and-mod.outputs.cache-hit != 'true'
         run: go mod tidy
 
       - name: test All
