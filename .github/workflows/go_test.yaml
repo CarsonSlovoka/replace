@@ -9,6 +9,7 @@ on:
       - temp
 defaults:
   run:
+    # cache.key不算在內，只會影響run.working-directory
     working-directory: ./src
 jobs:
   test:
@@ -47,7 +48,7 @@ jobs:
           path: |
             ${{ matrix.path }}
             ~\go\pkg\mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}-${{ hashFiles('main_test.go') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('src/go.sum') }}-${{ hashFiles('src/main_test.go') }}
           # 除了go.sum也把test的文件加入
           # key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           # 如果多了**會出現Cache hit occurred on the primary key的錯誤
