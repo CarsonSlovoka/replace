@@ -20,10 +20,11 @@ jobs:
         include:
           - platform: windows-latest
             path: ~\AppData\Local\go-build
-          - platform: macos-latest
-            path: ~/Library/Caches/go-build
-          - platform: ubuntu-latest
-            path: ~/.cache/go-build
+          # 有列出來的項目platform都必須要找的到才可以，不然map[key]錯誤就會導致後面的所有流程都沒辦法執行
+          # - platform: macos-latest
+          #   path: ~/Library/Caches/go-build
+          # - platform: ubuntu-latest
+          #   path: ~/.cache/go-build
         go-version: [ 1.19.x ]
     runs-on: ${{ matrix.platform }}
     name: Integration tests
