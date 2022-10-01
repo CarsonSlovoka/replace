@@ -52,6 +52,8 @@ jobs:
           # 除了go.sum也把test的文件加入
           # key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           # 如果多了**會出現Cache hit occurred on the primary key的錯誤
+
+          # 這個是指如果您的key名稱有誤，就會用下面的key來當作cache要被保留的名稱。點擊cache的紀錄將可以看到Cache saved with key: ...
           restore-keys: |
             ${{ runner.os }}-go-
 
