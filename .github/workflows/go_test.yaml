@@ -16,6 +16,14 @@ jobs:
       matrix:
         # [ubuntu-latest, macos-latest, windows-latest]
         platform: [ windows-latest ]
+        # https://github.com/actions/cache/blob/main/examples.md?plain=1#L468-L491
+        include:
+          - platform: windows-latest
+            path: ~\AppData\Local\go-build
+          - platform: macos-latest
+            path: ~/Library/Caches/go-build
+          - platform: ubuntu-latest
+            path: ~/.cache/go-build
         go-version: [ 1.19.x ]
     runs-on: ${{ matrix.platform }}
     name: Integration tests
@@ -34,10 +42,12 @@ jobs:
           #   Linux: ~/.cache/go-build
           #   MacOS: ~/Library/Caches/go-build
           #   Windows: ~\AppData\Local\go-build
+          # 可以定義在matrix上再利用它include用map返回platform所對應的path
           path: |
-            ~\AppData\Local\go-build
+            ${{ matrix.path }}
             ~\go\pkg\mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}-${{ hashFiles('main_test.go') }}
+          # 除了go.sum也把test的文件加入
           # key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           # 如果多了**會出現Cache hit occurred on the primary key的錯誤
           restore-keys: |
@@ -54,8 +64,14 @@ jobs:
         run: go mod tidy
 
       - name: test All
+        # 如果要測試，就一定要安裝go還有相關套件(需要mod tidy)
+        if: steps.cache-go-and-mod.outputs.cache-hit != 'true'
         run: go test ./... -v
 
+      # https://github.com/actions/cache#cache-limits
+      # A repository can have up to 10GB of caches.
+      # Once the 10GB limit is reached, older caches will be evicted based on when the cache was last accessed.
+      # Caches that are not accessed within the last week will also be evicted. (隔週cache也會被清除)
       - name: Verify we have our cached file
         run: |
           dir ~\AppData\Local\go-build &&
