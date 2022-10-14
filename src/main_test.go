@@ -9,7 +9,7 @@ import (
 
 func chdir(dir string) (back2orgDirFunc func()) {
 	orgDir, _ := os.Getwd()
-	_ = os.Chdir(dir) // 注意test會跑所有Example, Test的案例，所以當有chdir用的是相對路徑，那麼就要確保相對路徑都是正確的
+	_ = os.Chdir(dir) // 注意test會跑所有{Example, Test}的案例，所以當有chdir，那麼就要確保相對路徑都正確！(每一個做完都要還原會去，否則下一個的相對路徑將會基於前一個改變的結果)
 	return func() {
 		err := os.Chdir(orgDir)
 		if err != nil {

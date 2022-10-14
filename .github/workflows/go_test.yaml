@@ -9,6 +9,7 @@ on:
       - temp
 defaults:
   run:
+    # cache.key不算在內，只會影響run.working-directory
     working-directory: ./src
 jobs:
   test:
@@ -16,33 +17,66 @@ jobs:
       matrix:
         # [ubuntu-latest, macos-latest, windows-latest]
         platform: [ windows-latest ]
+        # https://github.com/actions/cache/blob/main/examples.md?plain=1#L468-L491
+        include:
+          - platform: windows-latest
+            path: ~\AppData\Local\go-build
+          # 有列出來的項目platform都必須要找的到才可以，不然map[key]錯誤就會導致後面的所有流程都沒辦法執行
+          # - platform: macos-latest
+          #   path: ~/Library/Caches/go-build
+          # - platform: ubuntu-latest
+          #   path: ~/.cache/go-build
         go-version: [ 1.19.x ]
     runs-on: ${{ matrix.platform }}
     name: Integration tests
     steps:
-      - name: Install Go.
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ matrix.go-version }}
-
       - name: Check out code into the Go module directory.
         uses: actions/checkout@v3
 
       # https://github.com/actions/cache#example-workflow
       # https://github.com/actions/cache/blob/main/examples.md#go---modules
-      # - name: cache
-      #   id: cache-primes
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ~\AppData\Local\go-build
-      #       ~\go\pkg\mod
-      #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-go-
+      - name: Enable Cache
+        # Note: The id defined in actions/cache must match the id in the if statement (i.e. steps.[ID].outputs.cache-hit)
+        id: cache-go-and-mod
+        uses: actions/cache@v3
+        with:
+          # path:
+          #   Linux: ~/.cache/go-build
+          #   MacOS: ~/Library/Caches/go-build
+          #   Windows: ~\AppData\Local\go-build
+          # 可以定義在matrix上再利用它include用map返回platform所對應的path
+          path: |
+            ${{ matrix.path }}
+            ~\go\pkg\mod
+          key: ${{ runner.os }}-go-${{ hashFiles('src/go.sum') }}-${{ hashFiles('src/main_test.go') }}
+          # 除了go.sum也把test的文件加入
+          # key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          # 如果多了**會出現Cache hit occurred on the primary key的錯誤
+
+          # 這個是指如果您的key名稱有誤，就會用下面的key來當作cache要被保留的名稱。點擊cache的紀錄將可以看到Cache saved with key: ...
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Go.
+        if: steps.cache-go-and-mod.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
 
       - name: go mod tidy
+        if: steps.cache-go-and-mod.outputs.cache-hit != 'true'
         run: go mod tidy
 
       - name: test All
+        # 如果要測試，就一定要安裝go還有相關套件(需要mod tidy)
+        if: steps.cache-go-and-mod.outputs.cache-hit != 'true'
         run: go test ./... -v
+
+      # https://github.com/actions/cache#cache-limits
+      # A repository can have up to 10GB of caches.
+      # Once the 10GB limit is reached, older caches will be evicted based on when the cache was last accessed.
+      # Caches that are not accessed within the last week will also be evicted. (隔週cache也會被清除)
+      - name: Verify we have our cached file
+        run: |
+          dir ~\AppData\Local\go-build &&
+          dir ~\go\pkg\mod
