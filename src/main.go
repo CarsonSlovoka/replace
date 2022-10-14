@@ -118,14 +118,14 @@ func main() {
 				}
 
 				if !re.Match(bs) {
-					return
+					continue
 				}
 
 				newStr := re.ReplaceAllString(unsafe.BytesToStr(bs), cfg.Substitution)
 				if isDryRun {
 					_ = f.Close()
 					fmt.Print(newStr)
-					return
+					continue
 				}
 
 				_ = f.Truncate(0)     // 我們使用O_RDWR所以可以再寫入，把所有內容截斷(清除內文)
