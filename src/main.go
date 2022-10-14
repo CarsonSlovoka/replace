@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -102,7 +104,9 @@ func main() {
 		wg.Add(1)
 		go func(files []string, jobID int) {
 			defer func() {
-				log.Printf("workID: %d done it!\n", jobID)
+				if cfg.Verbose {
+					log.Printf("workID: %d done it!\n", jobID)
+				}
 				wg.Done()
 			}()
 			for _, fPath := range files {
@@ -126,6 +130,17 @@ func main() {
 					_ = f.Close()
 					fmt.Print(newStr)
 					continue
+				}
+
+				hasherMd5 := md5.New()
+				hasherMd5.Write(bs)
+				orgHash := hasherMd5.Sum(nil)
+				hasherMd5.Reset()
+				// hasherMd5.Write(unsafe.StrToBytes(newStr)) // slice bounds out of range [:1664] with capacity 0
+				hasherMd5.Write([]byte(newStr))
+				newHash := hasherMd5.Sum(nil)
+				if bytes.Compare(orgHash, newHash) == 0 {
+					continue // 表示舊的檔案與新的檔案所要寫入的內容都完全相同，所以沒必要再對檔案本身做異動
 				}
 
 				_ = f.Truncate(0)     // 我們使用O_RDWR所以可以再寫入，把所有內容截斷(清除內文)
