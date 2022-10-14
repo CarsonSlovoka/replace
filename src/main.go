@@ -6,6 +6,7 @@ import (
 	"fmt"
 	. "github.com/CarsonSlovoka/go-pkg/v2/fmt"
 	"github.com/CarsonSlovoka/go-pkg/v2/slices"
+	"github.com/CarsonSlovoka/go-pkg/v2/unsafe"
 	"io"
 	"log"
 	"os"
@@ -33,6 +34,7 @@ func NewConfig(path string) (*Config, error) {
 	cfg := new(Config)
 	err = json.NewDecoder(f).Decode(cfg)
 	return cfg, err
+
 }
 
 var (
@@ -88,7 +90,6 @@ func main() {
 				if matched {
 					allFileList = append(allFileList, path)
 				}
-
 			}
 			return nil
 		})
@@ -97,10 +98,13 @@ func main() {
 	sTime := time.Now()
 	subFileList := slices.ChunkBy(allFileList, cfg.MaxLoading)
 	re := regexp.MustCompile(cfg.Regexp)
-	for _, subFiles := range subFileList {
+	for workerID, subFiles := range subFileList {
 		wg.Add(1)
-		go func(files []string) {
-			defer wg.Done()
+		go func(files []string, jobID int) {
+			defer func() {
+				log.Printf("workID: %d done it!\n", jobID)
+				wg.Done()
+			}()
 			for _, fPath := range files {
 				f, err := os.OpenFile(fPath, os.O_RDWR, 0666)
 				if err != nil {
@@ -117,7 +121,7 @@ func main() {
 					return
 				}
 
-				newStr := re.ReplaceAllString(string(bs), cfg.Substitution)
+				newStr := re.ReplaceAllString(unsafe.BytesToStr(bs), cfg.Substitution)
 				if isDryRun {
 					_ = f.Close()
 					fmt.Print(newStr)
@@ -131,7 +135,7 @@ func main() {
 					continue
 				}
 
-				if _, err = f.Write([]byte(newStr)); err != nil {
+				if _, err = f.Write(unsafe.StrToBytes(newStr)); err != nil {
 					_ = f.Close()
 					log.Println(err)
 					continue
@@ -141,7 +145,7 @@ func main() {
 					log.Printf("File:%s changed done.\n", fPath)
 				}
 			}
-		}(subFiles)
+		}(subFiles, workerID)
 	}
 	wg.Wait()
 	log.Printf("%.0f seconds in total\n", time.Now().Sub(sTime).Seconds())
