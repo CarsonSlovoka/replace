@@ -191,9 +191,10 @@ func ManifestToSyso(output string) error {
 */
 
 // BuildMain 主程式
-// pkgDir是go.mod的資料夾位置
 func BuildMain(wkDir, output string) error {
-	args := []string{"build", "-ldflags", cfg.LdFlags, "-o", output}
+	args := []string{"build", "-ldflags", cfg.LdFlags, "-o", output,
+		"--pkgdir", "..", // go.mod位於工作目錄的哪裡
+	}
 	cmd := getCmd("go", args...)
 	cmd.Dir = wkDir
 	return cmd.Run()
@@ -288,7 +289,7 @@ func ZipSource(psw string) (zipFilePath string, err error) {
 		srcPath string
 		outPath string
 	}{
-		{"../src/.replace.json", "example-replace.json"},
+		{"../replace/.replace.json", "example-replace.json"},
 
 		{fmt.Sprintf("./%s.exe", cfg.AppName), cfg.AppName + ".exe"},
 	} {
@@ -362,7 +363,7 @@ func main() {
 		}()
 	}
 
-	wkDir, _ := filepath.Abs("../src") // go.mod所在路徑
+	wkDir, _ := filepath.Abs("../replace")
 	outputExePath := cfg.AppName + ".exe"
 	if err := BuildMain(wkDir, filepath.Join("../build/", outputExePath)); err != nil {
 		log.Fatal(err)

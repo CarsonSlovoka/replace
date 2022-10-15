@@ -10,7 +10,7 @@ on:
 defaults:
   run:
     # cache.key不算在內，只會影響run.working-directory
-    working-directory: ./src
+    working-directory: ./replace
 jobs:
   test:
     strategy:
@@ -48,7 +48,7 @@ jobs:
           path: |
             ${{ matrix.path }}
             ~\go\pkg\mod
-          key: ${{ runner.os }}-go-${{ hashFiles('src/go.sum') }}-${{ hashFiles('src/main_test.go') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('replace/go.sum') }}-${{ hashFiles('replace/main_test.go') }}
           # 除了go.sum也把test的文件加入
           # key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           # 如果多了**會出現Cache hit occurred on the primary key的錯誤
@@ -70,7 +70,7 @@ jobs:
       - name: test All
         # 如果要測試，就一定要安裝go還有相關套件(需要mod tidy)
         if: steps.cache-go-and-mod.outputs.cache-hit != 'true'
-        run: go test ./... -v
+        run: go test ./... --pkgdir=.. -v
 
       # https://github.com/actions/cache#cache-limits
       # A repository can have up to 10GB of caches.

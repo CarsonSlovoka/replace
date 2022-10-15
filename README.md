@@ -20,6 +20,8 @@
 
 字串取代
 
+- [source code](./replace)
+
 ## Features
 
 - [可指定要匹配的檔案**名稱**](https://github.com/CarsonSlovoka/replace/blob/1230a78f5e29ab84177b362fff48e27264c97aba/src/.replace.json#L2-L3)(不指定則視為全部對象)
@@ -36,11 +38,12 @@
 
 ```yaml
 git clone https://github.com/CarsonSlovoka/replace.git
-cd replace/src
-go install -ldflags "-s -w"
+go install -ldflags "-s -w" github.com/CarsonSlovoka/replace/replace
 
 # 如果您不喜歡go install預設放置的目錄，可以選擇以下指令替換
-go build -o replaceAll.exe -ldflags "-s -w"
+git clone https://github.com/CarsonSlovoka/replace.git
+cd replace/replace # 請切換replace的資料夾
+go build -o replaceAll.exe -ldflags "-s -w" --pkgdir=.. # 因為go.mod位於上層目錄之中
 ```
 
 ## USAGE
@@ -48,6 +51,12 @@ go build -o replaceAll.exe -ldflags "-s -w"
 在您的工作目錄新增檔案(例如:my-replace)，內容可以參考[.replace.json](src/.replace.json)
 
 ```yaml
-reaplceAll.exe -f="my-replace.json"
-reaplceAll.exe -f="my-replace.json" -dry=1 # 僅測試，不會更改檔案
+replace -f="my-replace.json"
+replace -f="my-replace.json" -dry=1 # 僅測試，不會更改檔案
 ```
+
+> ⚠ `replace.exe`在windows系統，可能會與%WINDIR%\system32\replace.exe名稱相同，因此可能會有衝突，我們會建議您可以把執行檔改成`replaceAll.exe`
+
+## 雜記
+
+- [pkg.dev](doc/pkg-dev.md)

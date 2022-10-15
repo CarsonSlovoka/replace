@@ -1,4 +1,4 @@
-module replaceAll
+module github.com/CarsonSlovoka/replace
 
 go 1.19
 
