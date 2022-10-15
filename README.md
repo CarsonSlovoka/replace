@@ -6,7 +6,8 @@
       <img src="https://img.shields.io/badge/Made%20with-Go-1f425f.svg" alt="Made with Go">
   </a>
 
-  <img src="https://img.shields.io/github/go-mod/go-version/CarsonSlovoka/replace?filename=src%2Fgo.mod" alt="Go Version">
+  <!-- <img src="https://img.shields.io/github/go-mod/go-version/CarsonSlovoka/replace?filename=src%2Fgo.mod" alt="Go Version"> -->
+  <img src="https://img.shields.io/github/go-mod/go-version/CarsonSlovoka/replace?filename=go.mod" alt="Go Version">
 
   <a href="https://GitHub.com/CarsonSlovoka/replace/releases/">
       <img src="https://img.shields.io/github/release/CarsonSlovoka/replace" alt="Latest release">
